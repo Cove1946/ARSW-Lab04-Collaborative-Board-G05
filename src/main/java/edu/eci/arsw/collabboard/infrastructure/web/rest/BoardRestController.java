@@ -3,7 +3,6 @@ package edu.eci.arsw.collabboard.infrastructure.web.rest;
 import edu.eci.arsw.collabboard.application.service.BoardApplicationService;
 import edu.eci.arsw.collabboard.domain.model.Board;
 import jakarta.validation.Valid;
-import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -13,6 +12,13 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import java.net.URI;
+
+/**
+ * Thin HTTP adapter: translates requests into use-case calls and shapes the
+ * response. Holds no state, contains no business rule and never touches the
+ * persistence store directly.
+ */
 @RestController
 @RequestMapping("/api/boards")
 public class BoardRestController {
@@ -25,9 +31,10 @@ public class BoardRestController {
 
     @PostMapping
     public ResponseEntity<Board> create(@Valid @RequestBody CreateBoardRequest request) {
-        // TODO LAB-04: keep the controller thin; coordinate the HTTP response only.
         Board created = service.createBoard(request.name());
-        return ResponseEntity.status(HttpStatus.CREATED).body(created);
+        return ResponseEntity
+                .created(URI.create("/api/boards/" + created.id()))
+                .body(created);
     }
 
     @GetMapping("/{boardId}")

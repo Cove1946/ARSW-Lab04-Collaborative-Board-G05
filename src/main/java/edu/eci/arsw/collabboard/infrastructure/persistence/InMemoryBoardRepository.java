@@ -1,12 +1,13 @@
 package edu.eci.arsw.collabboard.infrastructure.persistence;
 
-import edu.eci.arsw.collabboard.application.port.out.BoardRepository;
-import edu.eci.arsw.collabboard.domain.model.Board;
-import org.springframework.stereotype.Repository;
-
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
+
+import org.springframework.stereotype.Repository;
+
+import edu.eci.arsw.collabboard.application.port.out.BoardRepository;
+import edu.eci.arsw.collabboard.domain.model.Board;
 
 @Repository
 public class InMemoryBoardRepository implements BoardRepository {
@@ -21,14 +22,16 @@ public class InMemoryBoardRepository implements BoardRepository {
 
     @Override
     public Board save(Board board) {
-        // TODO LAB-04: decide and document the semantics of save/replace.
+        // Upsert: the key is the board's own id, so a create and a full replace
+        // use the same path. Callers decide (via existsById) whether a replace is legal.
         boards.put(board.id(), board);
         return board;
     }
 
     @Override
     public Optional<Board> findById(String boardId) {
-        // TODO LAB-04: validate whether defensive copying is necessary with the current immutable model.
+        /// No defensive copy needed: Board and BoardElement are immutable records
+        // and Board already stores its elements through List.copyOf.
         return Optional.ofNullable(boards.get(boardId));
     }
 

@@ -1,11 +1,13 @@
 package edu.eci.arsw.collabboard.application.service;
 
+import edu.eci.arsw.collabboard.application.exception.BoardNotFoundException;
 import edu.eci.arsw.collabboard.application.port.out.BoardRepository;
 import edu.eci.arsw.collabboard.domain.model.Board;
 import edu.eci.arsw.collabboard.domain.model.BoardElement;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
+import java.util.UUID;
 
 @Service
 public class BoardApplicationService {
@@ -16,18 +18,28 @@ public class BoardApplicationService {
         this.repository = repository;
     }
 
+    /** Creates a board with a server-generated id and no elements. */
     public Board createBoard(String name) {
-        // TODO LAB-04: generate the id, enforce the use-case rules and persist through the port.
-        throw new UnsupportedOperationException("TODO LAB-04: createBoard");
+        Board board = new Board(UUID.randomUUID().toString(), name, List.of());
+        return repository.save(board);
     }
 
+    /** Returns an existing board or fails with {@link BoardNotFoundException}. */
     public Board getBoard(String boardId) {
-        // TODO LAB-04: use a concrete application exception when the board does not exist.
-        throw new UnsupportedOperationException("TODO LAB-04: getBoard");
+        return repository.findById(boardId)
+                .orElseThrow(() -> new BoardNotFoundException(boardId));
     }
 
+    /**
+     * Replaces the full state of an existing board, keeping its identity.
+     * Fails with {@link BoardNotFoundException} if the board does not exist
+     * (a replace never creates).
+     */
     public Board replaceBoard(String boardId, String name, List<BoardElement> elements) {
-        // TODO LAB-04: keep the existing identity and replace only a board that already exists.
-        throw new UnsupportedOperationException("TODO LAB-04: replaceBoard");
+                if (!repository.existsById(boardId)) {
+            throw new BoardNotFoundException(boardId);
+        }
+        Board replaced = new Board(boardId, name, elements);
+        return repository.save(replaced);
     }
 }

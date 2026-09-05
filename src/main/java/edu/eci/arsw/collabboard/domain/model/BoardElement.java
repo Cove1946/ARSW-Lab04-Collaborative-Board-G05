@@ -1,5 +1,14 @@
 package edu.eci.arsw.collabboard.domain.model;
 
+/**
+ * A single visual element on a {@link Board}.
+ *
+ * Minimum domain invariants (Lab 04):
+ * - {@code id} non-blank, {@code type} required and among the supported {@link ElementType} values.
+ * - non-negative {@code width} / {@code height}.
+ * - {@code text} defaults to empty string (used by TEXT elements).
+ */
+
 public record BoardElement(
         String id,
         ElementType type,

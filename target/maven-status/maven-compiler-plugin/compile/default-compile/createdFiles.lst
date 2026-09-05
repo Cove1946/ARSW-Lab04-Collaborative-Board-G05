@@ -1,0 +1,13 @@
+edu\eci\arsw\collabboard\CollaborativeBoardApplication.class
+edu\eci\arsw\collabboard\application\port\out\BoardRepository.class
+edu\eci\arsw\collabboard\infrastructure\web\rest\GlobalExceptionHandler.class
+edu\eci\arsw\collabboard\infrastructure\web\rest\ApiError.class
+edu\eci\arsw\collabboard\domain\model\ElementType.class
+edu\eci\arsw\collabboard\application\service\BoardApplicationService.class
+edu\eci\arsw\collabboard\infrastructure\web\rest\BoardRestController.class
+edu\eci\arsw\collabboard\infrastructure\persistence\InMemoryBoardRepository.class
+edu\eci\arsw\collabboard\domain\model\BoardElement.class
+edu\eci\arsw\collabboard\infrastructure\web\rest\CreateBoardRequest.class
+edu\eci\arsw\collabboard\domain\model\Board.class
+edu\eci\arsw\collabboard\infrastructure\web\rest\ReplaceBoardRequest.class
+edu\eci\arsw\collabboard\application\exception\BoardNotFoundException.class

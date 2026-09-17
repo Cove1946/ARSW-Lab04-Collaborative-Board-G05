@@ -30,7 +30,7 @@ public class InMemoryBoardRepository implements BoardRepository {
 
     @Override
     public Optional<Board> findById(String boardId) {
-        /// No defensive copy needed: Board and BoardElement are immutable records
+        // No defensive copy needed: Board and BoardElement are immutable records
         // and Board already stores its elements through List.copyOf.
         return Optional.ofNullable(boards.get(boardId));
     }

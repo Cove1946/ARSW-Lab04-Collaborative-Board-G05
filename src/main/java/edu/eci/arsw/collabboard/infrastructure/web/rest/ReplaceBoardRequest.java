@@ -9,6 +9,7 @@ import java.util.List;
 
 public record ReplaceBoardRequest(
         @NotBlank(message = "name is required") String name,
-        @NotNull(message = "elements are required") List<@Valid BoardElement> elements
+        @NotNull(message = "elements are required")
+        List<@NotNull(message = "element must not be null") @Valid BoardElement> elements
 ) {
 }

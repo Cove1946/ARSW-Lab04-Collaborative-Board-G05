@@ -36,7 +36,7 @@ public class BoardApplicationService {
      * (a replace never creates).
      */
     public Board replaceBoard(String boardId, String name, List<BoardElement> elements) {
-                if (!repository.existsById(boardId)) {
+        if (!repository.existsById(boardId)) {
             throw new BoardNotFoundException(boardId);
         }
         Board replaced = new Board(boardId, name, elements);

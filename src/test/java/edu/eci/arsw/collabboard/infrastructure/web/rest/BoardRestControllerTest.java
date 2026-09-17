@@ -15,6 +15,7 @@ import java.util.List;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.when;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
@@ -105,5 +106,76 @@ class BoardRestControllerTest {
                         .content("{\"name\":\"Final\",\"elements\":[]}"))
                 .andExpect(status().isNotFound())
                 .andExpect(jsonPath("$.code").value("BOARD_NOT_FOUND"));
+    }
+    @Test
+    void putWithSeveralInvalidFieldsReportsAllOfThemInStableOrder() throws Exception {
+        mockMvc.perform(put("/api/boards/board-1")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"name\":\"  \"}"))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.code").value("INVALID_REQUEST"))
+                .andExpect(jsonPath("$.message").value("elements: elements are required; name: name is required"));
+    }
+
+    @Test
+    void unknownRouteReturns404ApiError() throws Exception {
+        mockMvc.perform(get("/api/unknown"))
+                .andExpect(status().isNotFound())
+                .andExpect(jsonPath("$.code").value("NOT_FOUND"))
+                .andExpect(jsonPath("$.path").value("/api/unknown"));
+    }
+
+    @Test
+    void unsupportedMethodReturns405ApiError() throws Exception {
+        mockMvc.perform(delete("/api/boards/board-1"))
+                .andExpect(status().isMethodNotAllowed())
+                .andExpect(jsonPath("$.code").value("METHOD_NOT_ALLOWED"));
+    }
+
+    @Test
+    void unsupportedMediaTypeReturns415ApiError() throws Exception {
+        mockMvc.perform(post("/api/boards")
+                        .contentType(MediaType.TEXT_PLAIN)
+                        .content("Architecture Session"))
+                .andExpect(status().isUnsupportedMediaType())
+                .andExpect(jsonPath("$.code").value("UNSUPPORTED_MEDIA_TYPE"));
+    }
+
+    @Test
+    void putWithNullElementReturns400ApiError() throws Exception {
+        mockMvc.perform(put("/api/boards/board-1")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"name\":\"Final\",\"elements\":[null]}"))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.code").value("INVALID_REQUEST"));
+    }
+
+    @Test
+    void putWithInvalidElementReportsTheBrokenDomainRule() throws Exception {
+        mockMvc.perform(put("/api/boards/board-1")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"name\":\"Final\",\"elements\":[{\"id\":\"e1\",\"type\":\"RECTANGLE\",\"width\":-1}]}"))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.code").value("INVALID_INPUT"))
+                .andExpect(jsonPath("$.message").value("Element dimensions cannot be negative"));
+    }
+
+    @Test
+    void putWithUnknownElementTypeIsStillMalformed() throws Exception {
+        mockMvc.perform(put("/api/boards/board-1")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"name\":\"Final\",\"elements\":[{\"id\":\"e1\",\"type\":\"CIRCLE\"}]}"))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.code").value("MALFORMED_REQUEST"));
+    }
+
+    @Test
+    void unexpectedFailureReturns500WithoutInternalDetails() throws Exception {
+        when(service.getBoard("board-1")).thenThrow(new IllegalStateException("internal detail"));
+
+        mockMvc.perform(get("/api/boards/board-1"))
+                .andExpect(status().isInternalServerError())
+                .andExpect(jsonPath("$.code").value("INTERNAL_ERROR"))
+                .andExpect(jsonPath("$.message").value("Unexpected server error"));
     }
 }

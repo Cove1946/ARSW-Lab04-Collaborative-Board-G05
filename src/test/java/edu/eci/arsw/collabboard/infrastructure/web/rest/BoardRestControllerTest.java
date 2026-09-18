@@ -15,6 +15,7 @@ import java.util.List;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.when;
+import static org.hamcrest.Matchers.nullValue;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
@@ -177,5 +178,75 @@ class BoardRestControllerTest {
                 .andExpect(status().isInternalServerError())
                 .andExpect(jsonPath("$.code").value("INTERNAL_ERROR"))
                 .andExpect(jsonPath("$.message").value("Unexpected server error"));
+    }
+
+    @Test
+    void putAcceptsConnectorAndReturnsItsEndpoints() throws Exception {
+        whenReplacingBuildTheRealBoard();
+
+        mockMvc.perform(put("/api/boards/board-1")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                {"name":"Final","elements":[
+                                  {"id":"a","type":"RECTANGLE","x":10,"y":10,"width":170,"height":70,"text":"API"},
+                                  {"id":"b","type":"TEXT","x":300,"y":10,"width":160,"height":32,"text":"Notes"},
+                                  {"id":"c","type":"CONNECTOR","sourceId":"a","targetId":"b"}
+                                ]}"""))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.elements[2].type").value("CONNECTOR"))
+                .andExpect(jsonPath("$.elements[2].sourceId").value("a"))
+                .andExpect(jsonPath("$.elements[2].targetId").value("b"))
+                .andExpect(jsonPath("$.elements[0].sourceId").value(nullValue()));
+    }
+
+    @Test
+    void putKeepsAcceptingLab04ElementsWithoutConnectorFields() throws Exception {
+        whenReplacingBuildTheRealBoard();
+        mockMvc.perform(put("/api/boards/board-1").contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"name\":\"Final\",\"elements\":[{\"id\":\"e1\",\"type\":\"RECTANGLE\",\"x\":0,\"y\":0,\"width\":100,\"height\":40,\"text\":\"\"}]}"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.elements[0].type").value("RECTANGLE"));
+    }
+
+    @Test
+    void putConnectorWithSameEndpointsReturns400WithDomainMessage() throws Exception {
+        mockMvc.perform(put("/api/boards/board-1").contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"name\":\"Final\",\"elements\":[{\"id\":\"c\",\"type\":\"CONNECTOR\",\"sourceId\":\"a\",\"targetId\":\"a\"}]}"))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.code").value("INVALID_INPUT"))
+                .andExpect(jsonPath("$.message").value("Connector c must join two different elements"));
+    }
+
+    @Test
+    void putConnectorWithoutTargetReturns400() throws Exception {
+        mockMvc.perform(put("/api/boards/board-1").contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"name\":\"Final\",\"elements\":[{\"id\":\"c\",\"type\":\"CONNECTOR\",\"sourceId\":\"a\"}]}"))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.code").value("INVALID_INPUT"))
+                .andExpect(jsonPath("$.message").value("Connector c requires sourceId and targetId"));
+    }
+
+    @Test
+    void putRectangleWithSourceIdReturns400() throws Exception {
+        mockMvc.perform(put("/api/boards/board-1").contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"name\":\"Final\",\"elements\":[{\"id\":\"r\",\"type\":\"RECTANGLE\",\"sourceId\":\"a\"}]}"))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.code").value("INVALID_INPUT"))
+                .andExpect(jsonPath("$.message").value("Only CONNECTOR elements can have sourceId/targetId: r"));
+    }
+
+    @Test
+    void putConnectorToMissingElementReturns400() throws Exception {
+        whenReplacingBuildTheRealBoard();
+        mockMvc.perform(put("/api/boards/board-1").contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"name\":\"Final\",\"elements\":[{\"id\":\"a\",\"type\":\"TEXT\",\"text\":\"A\"},{\"id\":\"c\",\"type\":\"CONNECTOR\",\"sourceId\":\"a\",\"targetId\":\"ghost\"}]}"))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.code").value("INVALID_INPUT"))
+                .andExpect(jsonPath("$.message").value("Connector c references a missing element: ghost"));
+    }
+
+    private void whenReplacingBuildTheRealBoard() {
+        when(service.replaceBoard(eq("board-1"), any(), any())).thenAnswer(invocation ->
+                new Board("board-1", invocation.getArgument(1), invocation.getArgument(2)));
     }
 }

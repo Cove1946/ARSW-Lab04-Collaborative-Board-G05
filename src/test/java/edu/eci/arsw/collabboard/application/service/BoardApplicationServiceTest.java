@@ -74,4 +74,30 @@ class BoardApplicationServiceTest {
         assertThrows(IllegalArgumentException.class,
                 () -> service.createBoard("  "));
     }
+
+    @Test
+    void shouldPersistConnectorBetweenExistingElements() {
+        Board created = service.createBoard("Connected");
+        List<BoardElement> elements = List.of(
+                new BoardElement("a", ElementType.RECTANGLE, 0, 0, 100, 40, "A"),
+                new BoardElement("b", ElementType.TEXT, 200, 0, 100, 30, "B"),
+                BoardElement.connector("c", "a", "b")
+        );
+
+        service.replaceBoard(created.id(), "Connected", elements);
+
+        BoardElement connector = service.getBoard(created.id()).elements().get(2);
+        assertEquals(ElementType.CONNECTOR, connector.type());
+        assertEquals("a", connector.sourceId());
+        assertEquals("b", connector.targetId());
+    }
+
+    @Test
+    void shouldKeepStoredBoardWhenReplacementHasDanglingConnector() {
+        Board created = service.createBoard("Draft");
+
+        assertThrows(IllegalArgumentException.class,
+                () -> service.replaceBoard(created.id(), "Broken", List.of(BoardElement.connector("c", "a", "b"))));
+        assertEquals(created, service.getBoard(created.id()));
+    }
 }

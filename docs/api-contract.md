@@ -90,3 +90,38 @@ Every error has the following shape:
 | 405 | `METHOD_NOT_ALLOWED` | Unsupported HTTP method |
 | 415 | `UNSUPPORTED_MEDIA_TYPE` | Request body is not JSON |
 | 500 | `INTERNAL_ERROR` | Unexpected server failure; implementation details are omitted |
+
+### Connector rule messages
+
+A broken connector rule is reported as `400 INVALID_INPUT` with the exact message produced by the domain:
+
+| Rule | `message` |
+|---|---|
+| `sourceId` or `targetId` missing | `Connector {id} requires sourceId and targetId` |
+| `sourceId` equal to `targetId` | `Connector {id} must join two different elements` |
+| Endpoint does not exist in the Board | `Connector {id} references a missing element: {elementId}` |
+| RECTANGLE or TEXT carrying references | `Only CONNECTOR elements can have sourceId/targetId: {id}` |
+
+## Decisions and variations from the minimum contract
+
+1. **`Location` header on `201`** (Lab 04): a compatible addition that states the URL of the created resource.
+2. **`MALFORMED_REQUEST` and `INTERNAL_ERROR`** (Lab 04): cover invalid JSON and unexpected failures without exposing internal messages.
+3. **Spring's own errors keep their real status** (fixed in Lab 05): 404, 405 and 415 are no longer turned into 500.
+4. **Element rules reported as `INVALID_INPUT`** (fixed in Lab 05): even though Jackson detects the failure while constructing `BoardElement`, the real rule message is returned.
+5. **`INVALID_REQUEST` lists every error, sorted** (fixed in Lab 05): the same request always produces the same message.
+6. **`sourceId` / `targetId`** (Lab 05): new fields, optional for RECTANGLE and TEXT. A Lab 04 client that omits them keeps working; responses always include them (`null` when they do not apply).
+7. **Unknown fields are ignored** (Spring Boot default): a tolerant reader that lets client and server evolve separately.
+8. **No new endpoints**: the full-board PUT already persists moves and connectors.
+9. **No version control**: the last PUT replaces the state; concurrency is addressed in Lab 07.
+
+## Client-side errors (BoardApiClient)
+
+The web client converts every failure into `BoardApiError { status, code, message }`. When an HTTP response
+exists it uses the values from `ApiError`; otherwise it uses `status = 0` and one of these codes:
+
+| `code` | When |
+|---|---|
+| `NETWORK_ERROR` | The server is unreachable |
+| `TIMEOUT` | No response within 10 seconds |
+| `MISSING_BOARD_ID` | A load or save was attempted without a `boardId` |
+| `HTTP_ERROR` | Error response without an `ApiError` body |

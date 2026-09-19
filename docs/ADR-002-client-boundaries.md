@@ -31,6 +31,8 @@ The separation introduces small modules and explicit intent wiring that can feel
 
 ## Evidence
 
+- `mvn test`: 40 tests passing — the 12 delivered in Lab 04 are all still present, plus 28 added for CONNECTOR invariants, the updated REST contract, the error-handling fixes and integration.
 - Domain, REST and integration tests cover connector persistence and rejected invalid replacements.
+- The boundary is checkable with a search: `fetch(` appears only in `static/js/api/board-api-client.js`, and `board-view.js` has no imports at all, so it cannot reach the API.
 - The API client converts HTTP, network and timeout failures to one error shape.
 - Manual verification covers creating, loading, moving, connecting, saving, reloading and retrying a failed operation.

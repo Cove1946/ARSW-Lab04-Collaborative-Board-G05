@@ -1,20 +1,49 @@
 <!doctype html>
-<html lang="en">
+<html lang="es">
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>ARSW Collaborative Board</title>
-    <style>
-        body { font-family: system-ui, sans-serif; max-width: 860px; margin: 48px auto; padding: 0 20px; line-height: 1.5; color: #1d2733; }
-        .card { border: 1px solid #cbd6df; border-radius: 12px; padding: 24px; background: #f6f9fb; }
-        code { background: #e8f0f7; padding: 2px 6px; border-radius: 4px; }
-    </style>
+    <link rel="icon" href="data:,">
+    <link rel="stylesheet" href="/css/app.css">
 </head>
 <body>
-<h1>ARSW Collaborative Architecture Board</h1>
-<div class="card">
-    <p><strong>Lab 04 starter.</strong> The interactive SVG board will arrive in Lab 05.</p>
-    <p>For now, build the backend architecture and verify the REST contract under <code>/api/boards</code>.</p>
-</div>
+<header class="app-header">
+    <div>
+        <h1>ARSW Collaborative Board</h1>
+        <p>Lab #5 — Interactive Board sobre la API REST</p>
+    </div>
+    <span id="remoteStatus" class="status status-idle" role="status">idle</span>
+</header>
+
+<section class="bar" aria-label="Board">
+    <button id="newBoardBtn" type="button">Nuevo board</button>
+    <input id="boardId" class="grow" placeholder="boardId a cargar" aria-label="boardId">
+    <button id="loadBtn" type="button">Cargar</button>
+    <input id="boardName" placeholder="Nombre del board" aria-label="Nombre del board">
+    <button id="saveBtn" type="button" class="primary">Guardar</button>
+    <button id="retryBtn" type="button" class="warning" hidden>Reintentar</button>
+</section>
+
+<section class="bar" aria-label="Herramientas">
+    <button id="addRectBtn" type="button">+ Rectángulo</button>
+    <button id="addTextBtn" type="button">+ Texto</button>
+    <button id="editTextBtn" type="button">Editar texto</button>
+    <button id="connectBtn" type="button">Conectar</button>
+    <button id="deleteBtn" type="button">Eliminar</button>
+    <span id="boardInfo" class="info"></span>
+</section>
+
+<p id="message" class="message" aria-live="polite"></p>
+
+<main>
+    <svg id="boardCanvas" viewBox="0 0 1000 600" tabindex="0" aria-label="Lienzo del board"></svg>
+</main>
+
+<footer>
+    Guardar envía el board completo con PUT /api/boards/{id}. La colaboración en tiempo real llega en el Lab #6.
+</footer>
+
+<script type="module" src="/js/app.js"></script>
 </body>
 </html>
